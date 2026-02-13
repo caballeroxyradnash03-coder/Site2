@@ -23,9 +23,10 @@ $app = new Laravel\Lumen\Application(
     dirname(__DIR__)
 );
 
-// $app->withFacades();
+// uncomment this line if you want to use the facades provided by lumen
+$app->withFacades();
 
-// $app->withEloquent();
+$app->withEloquent();
 
 /*
 |--------------------------------------------------------------------------
