@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Traits\ApiResponser;
 
 class UserController extends Controller
 {
+    // add the ApiResponser trait to standardize API responses
+    use ApiResponser;
     private $request;
 
     public function __construct(Request $request)
@@ -17,13 +20,13 @@ class UserController extends Controller
     public function getUsers()
     {
         $users = User::all();
-        return response()->json(['data' => $users], 200);
+        return $this->successResponse($users);
     }
 
     public function index()
     {
         $users = User::all();
-        return response()->json(['data' => $users], 200);
+        return $this->successResponse($users);
     }
 
     public function add(Request $request)
@@ -38,10 +41,11 @@ class UserController extends Controller
 
         try {
             $user = User::create($request->all());
-            return response()->json(['data' => $user], 201);
+            return $this->successResponse($user, 
+                \Illuminate\Http\Response::HTTP_CREATED);
         } catch (\Illuminate\Database\QueryException $e) {
             if ($e->getCode() == '23000') {
-                return response()->json(['error' => 'Username already exists'], 409);
+                return $this->errorResponse('Username already exists', \Illuminate\Http\Response::HTTP_CONFLICT);
             }
             throw $e;
         }
@@ -49,39 +53,39 @@ class UserController extends Controller
     public function show($id)
     {
         $user = User::findOrFail($id);
-        return response()->json(['data' => $user], 200);
+        return $this->successResponse($user);
     }
     public function delete($id)
     {
         $user = User::find($id);
         if (!$user) {
-            return response()->json(['error' => 'User not found'], 404);
+            return $this->errorResponse('User not found', \Illuminate\Http\Response::HTTP_NOT_FOUND);
         }
         $user->delete();
-        return response()->json(['data' => ['message' => 'User deleted']], 200);
+        return $this->successResponse(['message' => 'User deleted']);
     }
 
     public function update(Request $request, $id)
     {
         $user = User::find($id);
         if (!$user) {
-            return response()->json(['error' => 'User not found'], 404);
+            return $this->errorResponse('User not found', \Illuminate\Http\Response::HTTP_NOT_FOUND);
         }
 
         // Check each field - if provided, it must not be empty
         if ($request->has('username') && empty($request->input('username'))) {
-            return response()->json(['error' => 'Username cannot be empty'], 400);
+            return $this->errorResponse('Username cannot be empty', \Illuminate\Http\Response::HTTP_BAD_REQUEST);
         }
         if ($request->has('password') && empty($request->input('password'))) {
-            return response()->json(['error' => 'Password cannot be empty'], 400);
+            return $this->errorResponse('Password cannot be empty', \Illuminate\Http\Response::HTTP_BAD_REQUEST);
         }
         if ($request->has('gender') && empty($request->input('gender'))) {
-            return response()->json(['error' => 'Gender cannot be empty'], 400);
+            return $this->errorResponse('Gender cannot be empty', \Illuminate\Http\Response::HTTP_BAD_REQUEST);
         }
 
         // Check at least one field is provided
         if (!$request->has('username') && !$request->has('password') && !$request->has('gender')) {
-            return response()->json(['error' => 'Provide at least one field to update'], 400);
+            return $this->errorResponse('Provide at least one field to update', \Illuminate\Http\Response::HTTP_BAD_REQUEST);
         }
 
         $rules = [
@@ -92,6 +96,6 @@ class UserController extends Controller
 
         $this->validate($request, $rules);
         $user->update($request->all());
-        return response()->json(['data' => $user], 200);
+        return $this->successResponse($user);
     }
 }
