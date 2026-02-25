@@ -6,11 +6,15 @@ class User extends Model
 {
     public $timestamps = false;
     protected $table = 'users';
-    protected $fillable = ['username', 'password'];
+    // allow mass-assigning gender when creating users
+    protected $fillable = ['username', 'password', 'gender'];
 
-   protected $hidden = [
-       'password',
-   ];
+    // hide sensitive/internal fields from JSON responses
+    protected $hidden = [
+        'password',
+        'created_at',
+        'updated_at',
+    ];
 }
 
 

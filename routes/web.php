@@ -21,7 +21,15 @@ $router->get('/test', function () use ($router) {
     return 'ok';
 });
 
+// Routes without /api prefix (for public access like teacher showed)
+$router->get('/users', 'UserController@index');
+$router->post('/users', 'UserController@add');
+$router->get('/users/{id}', 'UserController@show');
+$router->put('/users/{id}', 'UserController@update');
+$router->patch('/users/{id}', 'UserController@update');
+$router->delete('/users/{id}', 'UserController@delete');
 
+// Routes with /api prefix (original group)
 $router->group(['prefix' => 'api'], function () use ($router) {
     $router->get('/users', 'UserController@index');
     $router->post('/users', 'UserController@add');
@@ -31,5 +39,11 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->delete('/users/{id}', 'UserController@delete');
     $router->get('/users-raw', function () {    
         return \App\Models\User::all();
+    });
+    $router->get('/debug', function () {
+        return [
+            'db' => env('DB_DATABASE'),
+            'cwd' => getcwd(),
+        ];
     });
 });
