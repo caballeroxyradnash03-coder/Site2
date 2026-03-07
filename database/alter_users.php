@@ -1,9 +1,9 @@
 <?php
-// Make existing NULL genders set to 'Unknown', set default and NOT NULL, and drop timestamps.
+// Make existing NULL genders set to 'Unknown', set default and NOT NULL, and add jobid column.
 try {
     $host = '127.0.0.1';
     $port = 3306;
-    $db = 'site1';
+    $db = 'ddsbe2';
     $user = 'root';
     $pass = '';
 
@@ -15,13 +15,18 @@ try {
     // 2) set default and NOT NULL
     $pdo->exec("ALTER TABLE `users` MODIFY `gender` VARCHAR(10) NOT NULL DEFAULT 'Unknown'");
 
-    // 3) drop timestamp columns if they exist
-    $cols = [];
-    $res = $pdo->query("SHOW COLUMNS FROM `users`")->fetchAll(PDO::FETCH_COLUMN);
-    if (in_array('created_at', $res)) $cols[] = 'created_at';
-    if (in_array('updated_at', $res)) $cols[] = 'updated_at';
-    if (!empty($cols)) {
-        $pdo->exec('ALTER TABLE `users` DROP COLUMN ' . implode(', DROP COLUMN ', $cols));
+    // 3) add jobid column if it doesn't exist
+    $cols = $pdo->query("SHOW COLUMNS FROM `users`")->fetchAll(PDO::FETCH_COLUMN);
+    if (!in_array('jobid', $cols)) {
+        $pdo->exec("ALTER TABLE `users` ADD COLUMN `jobid` INT UNSIGNED NOT NULL AFTER `gender`");
+    }
+
+    // 4) drop timestamp columns if they exist
+    $dropCols = [];
+    if (in_array('created_at', $cols)) $dropCols[] = 'created_at';
+    if (in_array('updated_at', $cols)) $dropCols[] = 'updated_at';
+    if (!empty($dropCols)) {
+        $pdo->exec('ALTER TABLE `users` DROP COLUMN ' . implode(', DROP COLUMN ', $dropCols));
     }
 
     echo "alter completed\n";

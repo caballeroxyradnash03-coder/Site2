@@ -98,6 +98,12 @@ class Handler extends ExceptionHandler
                 Response::HTTP_UNAUTHORIZED);
         }
 
+        if ($exception instanceof ClientException) {
+            $message = $exception->getResponse()->getBody();
+            $code = $exception->getCode();
+            return $this->errorMessage($message, 200);
+        }
+
         // if you are running in development environment
         if (env('APP_DEBUG', false)) {
             return parent::render($request, $exception);
