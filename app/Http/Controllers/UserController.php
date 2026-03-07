@@ -6,11 +6,10 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Traits\ApiResponser;
-use App\Models\UserJob; 
+use App\Models\UserJob;
 
 class UserController extends Controller
 {
-    // add the ApiResponser trait to standardize API responses
     use ApiResponser;
     private $request;
 
@@ -41,19 +40,16 @@ class UserController extends Controller
         ];
 
         $this->validate($request, $rules);
-        
-        // validate if jobid is found in the table tbluserjob
-        $userjob = UserJob::findOrFail($request->jobid);
 
+        // validate if jobid is found in the table tbluserjob
+        UserJob::findOrFail($request->jobid);
 
         try {
-            // Create the user and ensure jobid is set even if fillable isn't
             $user = new User($request->all());
             $user->jobid = $request->jobid;
             $user->save();
 
-            return $this->successResponse($user, 
-                \Illuminate\Http\Response::HTTP_CREATED);
+            return $this->successResponse($user, \Illuminate\Http\Response::HTTP_CREATED);
         } catch (\Illuminate\Database\QueryException $e) {
             if ($e->getCode() == '23000') {
                 return $this->errorResponse('Username already exists', \Illuminate\Http\Response::HTTP_CONFLICT);
@@ -61,11 +57,13 @@ class UserController extends Controller
             throw $e;
         }
     }
+
     public function show($id)
     {
         $user = User::findOrFail($id);
         return $this->successResponse($user);
     }
+
     public function delete($id)
     {
         $user = User::find($id);
@@ -100,7 +98,6 @@ class UserController extends Controller
         }
 
         // If the payload contains the same username as the current record, ignore it.
-        // This prevents a unique-key error when the user submits their current username.
         if (array_key_exists('username', $payload) && $payload['username'] === $user->username) {
             unset($payload['username']);
         }
@@ -126,7 +123,6 @@ class UserController extends Controller
 
         $rules = [];
         if (array_key_exists('username', $payload)) {
-            // unique except current user id
             $rules['username'] = 'max:20|unique:users,username,' . $id;
         }
         if (array_key_exists('password', $payload)) {
@@ -152,7 +148,6 @@ class UserController extends Controller
         }
 
         // Only update the fields that were provided
-        // Update regular fields via fill
         $user->fill($payload);
 
         // Always set jobid explicitly to avoid mass-assignment / fillable issues
@@ -170,6 +165,5 @@ class UserController extends Controller
         }
 
         return $this->successResponse($user);
-
     }
 }
